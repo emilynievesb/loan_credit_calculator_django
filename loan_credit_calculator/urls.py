@@ -23,4 +23,5 @@ urlpatterns = [
 
     path('', views.index, name='index'),
     path('signup/', views.signup, name='signup'),
+    path('calculator/', views.calculatorView, name='calculator'),
 ]

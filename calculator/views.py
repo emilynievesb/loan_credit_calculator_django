@@ -1,7 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
+from django.db import IntegrityError
 
 # Create your views here.
 
@@ -21,8 +23,18 @@ def signup(request):
             try:
                 user = User.objects.create_user(username=request.POST["username"], password=request.POST["password1"])
                 user.save()
-                return HttpResponse("User created successfully")
-            except:
-                return HttpResponse("Error creating user")
-        return HttpResponse("Passwords do not match")
+                login(request, user)
+                return redirect("calculator")
+            except IntegrityError:
+                return render(request, 'signup.html', {
+                    'form': UserCreationForm,
+                    'error': "Username already exists"
+                })
+        return render(request, 'signup.html', {
+            'form': UserCreationForm,
+            'error': "Passwords do not match"
+        })
 
+
+def calculatorView(request):
+    return render(request, 'calculatorView.html')

@@ -4,12 +4,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 from django.http import HttpResponse
 from django.db import IntegrityError
-
-# Create your views here.
+from django.contrib.auth.decorators import login_required
 
 def index(request):
     return render(request, 'index.html')
 
+@login_required
 def calculatorView(request):
     return render(request, 'calculatorView.html')
 
@@ -20,7 +20,6 @@ def signup(request):
         })
     else:
         if(request.POST["password1"] == request.POST["password2"]):
-            #regiter User
             try:
                 user = User.objects.create_user(username=request.POST["username"], password=request.POST["password1"])
                 user.save()

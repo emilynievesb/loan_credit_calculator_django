@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.http import HttpResponse
 from django.db import IntegrityError
 
@@ -10,9 +10,10 @@ from django.db import IntegrityError
 def index(request):
     return render(request, 'index.html')
 
+def calculatorView(request):
+    return render(request, 'calculatorView.html')
 
 def signup(request):
-
     if request.method == 'GET':
         return render(request, 'signup.html', {
             'form': UserCreationForm
@@ -35,6 +36,22 @@ def signup(request):
             'error': "Passwords do not match"
         })
 
-
-def calculatorView(request):
-    return render(request, 'calculatorView.html')
+def signIn(request):
+    if(request.method == 'GET'):
+        return render(request, 'signIn.html', {
+            'form': AuthenticationForm
+        })
+    else:
+        user = authenticate(request, username=request.POST["username"], password=request.POST["password"])
+        if user is None:
+            return render(request, 'signIn.html', {
+                'form': AuthenticationForm,
+                'error': "Incorrect username or password"
+            })
+        else:
+            login(request, user)
+            return redirect("calculator")
+        
+def signOut(request):
+    logout(request)
+    return redirect("calculator")

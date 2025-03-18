@@ -15,9 +15,7 @@ def calculatorView(request):
 
 def signup(request):
     if request.method == 'GET':
-        return render(request, 'signup.html', {
-            'form': UserCreationForm
-        })
+        return render(request, 'signup.html')
     else:
         if(request.POST["password1"] == request.POST["password2"]):
             try:
@@ -27,24 +25,19 @@ def signup(request):
                 return redirect("calculator")
             except IntegrityError:
                 return render(request, 'signup.html', {
-                    'form': UserCreationForm,
                     'error': "Username already exists"
                 })
         return render(request, 'signup.html', {
-            'form': UserCreationForm,
             'error': "Passwords do not match"
         })
 
 def signIn(request):
     if(request.method == 'GET'):
-        return render(request, 'signIn.html', {
-            'form': AuthenticationForm
-        })
+        return render(request, 'signIn.html')
     else:
         user = authenticate(request, username=request.POST["username"], password=request.POST["password"])
         if user is None:
             return render(request, 'signIn.html', {
-                'form': AuthenticationForm,
                 'error': "Incorrect username or password"
             })
         else:

@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 from django.http import HttpResponse
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 def index(request):
     return render(request, 'index.html')
@@ -19,27 +21,35 @@ def signup(request):
     else:
         if(request.POST["password1"] == request.POST["password2"]):
             try:
-                user = User.objects.create_user(username=request.POST["username"], password=request.POST["password1"])
+                user = User.objects.create_user(username=request.POST["username"], password=request.POST["password1"], email=request.POST["email"])
                 user.save()
                 login(request, user)
                 return redirect("calculator")
             except IntegrityError:
                 return render(request, 'signup.html', {
-                    'error': "Username already exists"
+                    'error': "Something went wrong"
                 })
         return render(request, 'signup.html', {
             'error': "Passwords do not match"
         })
 
 def signIn(request):
-    if(request.method == 'GET'):
+    if (request.method == 'GET'):
         return render(request, 'signIn.html')
     else:
-        user = authenticate(request, username=request.POST["username"], password=request.POST["password"])
+        identifier = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=identifier, password=password)
+
         if user is None:
-            return render(request, 'signIn.html', {
-                'error': "Incorrect username or password"
-            })
+            try:
+                user_obj = User.objects.get(email=identifier)
+                user = authenticate(request, username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                user = None
+
+        if user is None:
+            return render(request, 'signIn.html', {'error': "Incorrect credentials"})
         else:
             login(request, user)
             return redirect("calculator")

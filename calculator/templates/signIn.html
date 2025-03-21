@@ -6,14 +6,16 @@
     <h1 class="text-2xl font-bold mb-6 text-center">Login</h1>
     <p>{{error}}</p>
     <form action="/signin/" method="POST">
+
         {% csrf_token %}
+
         <div>
-            <label for="username" class="block text-sm font-medium">Username</label>
+            <label for="username" class="block text-sm font-medium">Username or Email</label>
             <input 
                 type="text"
                 name="username"
                 id="username"
-                placeholder="Username"
+                placeholder="Username or Email"
                 class="mt-1 w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500"
             >
         </div>

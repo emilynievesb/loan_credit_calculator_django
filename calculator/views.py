@@ -1,18 +1,82 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
+import math
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
+
+
 
 def index(request):
     return render(request, 'index.html')
 
 @login_required
 def calculatorView(request):
+    if request.method == 'POST':
+        try:
+            data = request.POST
+            tipo_calculo = data.get('tipo_calculo')
+            subtipo = data.get('subtipo')
+            resultado = None
+
+            if tipo_calculo == 'interes':
+                if subtipo == 'vp':
+                    vf = float(data.get('vf', 0))
+                    tasa = float(data.get('tasa', 0)) / 100
+                    n = float(data.get('periodos', 0))
+                    resultado = vf / ((1 + tasa) ** n)
+                elif subtipo == 'vf':
+                    vp = float(data.get('vp', 0))
+                    tasa = float(data.get('tasa', 0)) / 100
+                    n = float(data.get('periodos', 0))
+                    resultado = vp * ((1 + tasa) ** n)
+                elif subtipo == 'n':
+                    vf = float(data.get('vf', 0))
+                    vp = float(data.get('vp', 0))
+                    tasa = float(data.get('tasa', 0)) / 100
+                    resultado = math.log(vf/vp) / math.log(1 + tasa)
+                elif subtipo == 'i':
+                    vf = float(data.get('vf', 0))
+                    vp = float(data.get('vp', 0))
+                    n = float(data.get('periodos', 0))
+                    resultado = ((vf/vp) ** (1/n) - 1) * 100
+
+            elif tipo_calculo == 'series':
+                if subtipo == 'vencida':
+                    a = float(data.get('renta', 0))
+                    tasa = float(data.get('tasa', 0)) / 100
+                    n = float(data.get('periodos', 0))
+                    resultado = a * ((1 - (1 + tasa)**-n) / tasa)
+                elif subtipo == 'anticipada':
+                    a = float(data.get('renta', 0))
+                    tasa = float(data.get('tasa', 0)) / 100
+                    n = float(data.get('periodos', 0))
+                    resultado = a * (1 + tasa) * ((1 - (1 + tasa)**-n) / tasa)
+                elif subtipo == 'perpetua':
+                    a = float(data.get('renta', 0))
+                    tasa = float(data.get('tasa', 0)) / 100
+                    resultado = a / tasa
+                elif subtipo == 'diferida':
+                    a = float(data.get('renta', 0))
+                    tasa = float(data.get('tasa', 0)) / 100
+                    n = float(data.get('periodos', 0))
+                    k = float(data.get('gracia', 0))
+                    resultado = a * ((1 - (1 + tasa)**-n) / tasa) * (1 + tasa)**-k
+
+            return JsonResponse({
+                'success': True,
+                'resultado': round(resultado, 2)
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+
     return render(request, 'calculatorView.html')
 
 @login_required

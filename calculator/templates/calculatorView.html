@@ -1,6 +1,191 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Calculator</h1>
-<p>Welcome to the calculator!</p>
+<main class="flex justify-center items-center min-h-screen">
+    <section class="bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-lg">
+        <h2 class="text-2xl font-bold text-center mb-6">Calculadora Financiera</h2>
+        
+        <form id="calculator-form" method="POST">
+            {% csrf_token %}
+            <label class="block text-sm font-medium mb-2">Tipo de Cálculo</label>
+            <select id="tipo-calculo" name="tipo_calculo" class="w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4" onchange="actualizarOpciones()">
+                <option value="">Seleccione una opción</option>
+                <option value="interes">Interés Compuesto</option>
+                <option value="series">Series Uniformes</option>
+            </select>
+            
+            <div id="opciones-extra" class="mb-4 hidden">
+                <label class="block text-sm font-medium mb-2">Seleccione qué desea hallar</label>
+                <select id="subtipo-calculo" name="subtipo" class="w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4" onchange="mostrarCampos()">
+                </select>
+            </div>
+            
+            <div id="campos-ingreso" class="hidden">
+            </div>
+            
+            <button type="submit" class="w-full py-2 mt-4 bg-blue-600 hover:bg-blue-700 rounded font-semibold">Calcular</button>
+        </form>
+
+        <div id="resultado" class="mt-4 p-4 bg-gray-700 rounded hidden">
+            <h3 class="text-lg font-semibold mb-2">Resultado:</h3>
+            <p id="resultado-valor" class="text-xl"></p>
+        </div>
+    </section>
+</main>
+
+<script>
+    function actualizarOpciones() {
+        const tipo = document.getElementById("tipo-calculo").value;
+        const opcionesExtra = document.getElementById("opciones-extra");
+        const subtipoSelect = document.getElementById("subtipo-calculo");
+        opcionesExtra.classList.remove("hidden");
+        subtipoSelect.innerHTML = "";
+        
+        if (tipo === "interes") {
+            subtipoSelect.innerHTML = `
+                <option value="vp">Valor Presente (VP)</option>
+                <option value="vf">Valor Futuro (VF)</option>
+                <option value="n">Número de períodos (n)</option>
+                <option value="i">Tasa de interés (i)</option>
+            `;
+        } else if (tipo === "series") {
+            subtipoSelect.innerHTML = `
+                <option value="vencida">Anualidad Vencida</option>
+                <option value="anticipada">Anualidad Anticipada</option>
+                <option value="perpetua">Anualidad Perpetua</option>
+                <option value="diferida">Anualidad Diferida</option>
+            `;
+        } else {
+            opcionesExtra.classList.add("hidden");
+        }
+        mostrarCampos();
+    }
+    
+    function mostrarCampos() {
+        const tipo = document.getElementById("tipo-calculo").value;
+        const subtipo = document.getElementById("subtipo-calculo").value;
+        const camposIngreso = document.getElementById("campos-ingreso");
+        camposIngreso.innerHTML = "";
+        camposIngreso.classList.remove("hidden");
+        
+        if (tipo === "interes") {
+            if (subtipo === "vp") {
+                camposIngreso.innerHTML = `
+                    <label class='block text-sm font-medium mb-2'>Valor Futuro (VF)</label>
+                    <input type='number' step='0.01' name='vf' id='vf' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el valor futuro'>
+                    <label class='block text-sm font-medium mb-2'>Tasa de Interés (%)</label>
+                    <input type='number' step='0.01' name='tasa' id='tasa' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la tasa de interés'>
+                    <label class='block text-sm font-medium mb-2'>Número de Períodos (n)</label>
+                    <input type='number' name='periodos' id='periodos' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el número de períodos'>
+                `;
+            }
+
+            else if (subtipo === "vf") {
+                camposIngreso.innerHTML = `
+                    <label class='block text-sm font-medium mb-2'>Valor Presente (VP)</label>
+                    <input type='number' step='0.01' name='vp' id='vp' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el valor presente'>
+                    <label class='block text-sm font-medium mb-2'>Tasa de Interés (%)</label>
+                    <input type='number' step='0.01' name='tasa' id='tasa' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la tasa de interés'>
+                    <label class='block text-sm font-medium mb-2'>Número de Períodos (n)</label>
+                    <input type='number' name='periodos' id='periodos' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el número de períodos'>
+                `;
+            }
+
+            else if (subtipo === "n") {
+                camposIngreso.innerHTML = `
+                    <label class='block text-sm font-medium mb-2'>Valor Futuro (VF)</label>
+                    <input type='number' step='0.01' name='vf' id='vf' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el valor futuro'>
+                    <label class='block text-sm font-medium mb-2'>Valor Presente (VP)</label>
+                    <input type='number' step='0.01' name='vp' id='vp' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el valor presente'>
+                    <label class='block text-sm font-medium mb-2'>Tasa de Interés (%)</label>
+                    <input type='number' step='0.01' name='tasa' id='tasa' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la tasa de interés'>
+                `;
+            }
+
+            else if (subtipo === "i") {
+                camposIngreso.innerHTML = `
+                    <label class='block text-sm font-medium mb-2'>Valor Futuro (VF)</label>
+                    <input type='number' step='0.01' name='vf' id='vf' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el valor futuro'>
+                    <label class='block text-sm font-medium mb-2'>Valor Presente (VP)</label>
+                    <input type='number' step='0.01' name='vp' id='vp' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el valor presente'>
+                    <label class='block text-sm font-medium mb-2'>Número de Períodos (n)</label>
+                    <input type='number' name='periodos' id='periodos' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el número de períodos'>
+                `;
+            }
+        } else if (tipo === "series") {
+            if (subtipo === "vencida") {
+                camposIngreso.innerHTML = `
+                    <label class='block text-sm font-medium mb-2'>Renta Anual (A)</label>
+                    <input type='number' step='0.01' name='renta' id='renta' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la renta anual'>
+                    <label class='block text-sm font-medium mb-2'>Tasa de Interés (%)</label>
+                    <input type='number' step='0.01' name='tasa' id='tasa' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la tasa de interés'>
+                    <label class='block text-sm font-medium mb-2'>Número de Períodos (n)</label>
+                    <input type='number' name='periodos' id='periodos' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el número de períodos'>
+                `;
+            }
+            
+            else if (subtipo === "anticipada") {
+                camposIngreso.innerHTML = `
+                    <label class='block text-sm font-medium mb-2'>Renta Anual (A)</label>
+                    <input type='number' step='0.01' name='renta' id='renta' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la renta anual'>
+                    <label class='block text-sm font-medium mb-2'>Tasa de Interés (%)</label>
+                    <input type='number' step='0.01' name='tasa' id='tasa' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la tasa de interés'>
+                    <label class='block text-sm font-medium mb-2'>Número de Períodos (n)</label>
+                    <input type='number' name='periodos' id='periodos' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el número de períodos'>
+                `;
+            }
+
+            else if (subtipo === "perpetua") {
+                camposIngreso.innerHTML = `
+                    <label class='block text-sm font-medium mb-2'>Renta Anual (A)</label>
+                    <input type='number' step='0.01' name='renta' id='renta' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la renta anual'>
+                    <label class='block text-sm font-medium mb-2'>Tasa de Interés (%)</label>
+                    <input type='number' step='0.01' name='tasa' id='tasa' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la tasa de interés'>
+                `;
+            }
+
+            else if (subtipo === "diferida") {
+                camposIngreso.innerHTML = `
+                    <label class='block text-sm font-medium mb-2'>Renta Anual (A)</label>
+                    <input type='number' step='0.01' name='renta' id='renta' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la renta anual'>
+                    <label class='block text-sm font-medium mb-2'>Tasa de Interés (%)</label>
+                    <input type='number' step='0.01' name='tasa' id='tasa' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese la tasa de interés'>
+                    <label class='block text-sm font-medium mb-2'>Número de Períodos (n)</label>
+                    <input type='number' name='periodos' id='periodos' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese el número de períodos'>
+                    <label class='block text-sm font-medium mb-2'>Períodos de Gracia (k)</label>
+                    <input type='number' name='gracia' id='gracia' class='w-full p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500 mb-4' placeholder='Ingrese los períodos de gracia'>
+                `;
+            }
+        }
+    }
+    
+    document.getElementById('calculator-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const resultadoDiv = document.getElementById('resultado');
+            const resultadoValor = document.getElementById('resultado-valor');
+            
+            if (data.success) {
+                resultadoDiv.classList.remove('hidden');
+                resultadoValor.textContent = data.resultado;
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error al procesar la solicitud: ' + error);
+        });
+    });
+</script>
 {% endblock %}

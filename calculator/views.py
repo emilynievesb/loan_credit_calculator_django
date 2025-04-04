@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 import math
 
 from django.contrib.auth import get_user_model
+from .models import LoanCalculation
 User = get_user_model()
 
 
@@ -23,27 +24,46 @@ def calculatorView(request):
             subtipo = data.get('subtipo')
             resultado = None
 
+            # Create a new calculation record
+            calculation = LoanCalculation(
+                user=request.user,
+                calculation_type=tipo_calculo,
+                calculation_subtype=subtipo
+            )
+
             if tipo_calculo == 'interes':
                 if subtipo == 'vp':
                     vf = float(data.get('vf', 0))
                     tasa = float(data.get('tasa', 0)) / 100
                     n = float(data.get('periodos', 0))
                     resultado = vf / ((1 + tasa) ** n)
+                    calculation.vf = vf
+                    calculation.tasa = tasa * 100
+                    calculation.periodos = n
                 elif subtipo == 'vf':
                     vp = float(data.get('vp', 0))
                     tasa = float(data.get('tasa', 0)) / 100
                     n = float(data.get('periodos', 0))
                     resultado = vp * ((1 + tasa) ** n)
+                    calculation.vp = vp
+                    calculation.tasa = tasa * 100
+                    calculation.periodos = n
                 elif subtipo == 'n':
                     vf = float(data.get('vf', 0))
                     vp = float(data.get('vp', 0))
                     tasa = float(data.get('tasa', 0)) / 100
                     resultado = math.log(vf/vp) / math.log(1 + tasa)
+                    calculation.vf = vf
+                    calculation.vp = vp
+                    calculation.tasa = tasa * 100
                 elif subtipo == 'i':
                     vf = float(data.get('vf', 0))
                     vp = float(data.get('vp', 0))
                     n = float(data.get('periodos', 0))
                     resultado = ((vf/vp) ** (1/n) - 1) * 100
+                    calculation.vf = vf
+                    calculation.vp = vp
+                    calculation.periodos = n
 
             elif tipo_calculo == 'series':
                 if subtipo == 'vencida':
@@ -51,21 +71,37 @@ def calculatorView(request):
                     tasa = float(data.get('tasa', 0)) / 100
                     n = float(data.get('periodos', 0))
                     resultado = a * ((1 - (1 + tasa)**-n) / tasa)
+                    calculation.renta = a
+                    calculation.tasa = tasa * 100
+                    calculation.periodos = n
                 elif subtipo == 'anticipada':
                     a = float(data.get('renta', 0))
                     tasa = float(data.get('tasa', 0)) / 100
                     n = float(data.get('periodos', 0))
                     resultado = a * (1 + tasa) * ((1 - (1 + tasa)**-n) / tasa)
+                    calculation.renta = a
+                    calculation.tasa = tasa * 100
+                    calculation.periodos = n
                 elif subtipo == 'perpetua':
                     a = float(data.get('renta', 0))
                     tasa = float(data.get('tasa', 0)) / 100
                     resultado = a / tasa
+                    calculation.renta = a
+                    calculation.tasa = tasa * 100
                 elif subtipo == 'diferida':
                     a = float(data.get('renta', 0))
                     tasa = float(data.get('tasa', 0)) / 100
                     n = float(data.get('periodos', 0))
                     k = float(data.get('gracia', 0))
                     resultado = a * ((1 - (1 + tasa)**-n) / tasa) * (1 + tasa)**-k
+                    calculation.renta = a
+                    calculation.tasa = tasa * 100
+                    calculation.periodos = n
+                    calculation.gracia = k
+
+            # Save the result and store in database
+            calculation.resultado = resultado
+            calculation.save()
 
             return JsonResponse({
                 'success': True,

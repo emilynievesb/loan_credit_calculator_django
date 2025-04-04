@@ -15,6 +15,10 @@ def index(request):
 def calculatorView(request):
     return render(request, 'calculatorView.html')
 
+@login_required
+def history(request):
+    return render(request, 'history.html')
+
 def signup(request):
     if request.method == 'GET':
         return render(request, 'signup.html')

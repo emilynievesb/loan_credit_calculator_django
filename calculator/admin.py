@@ -13,6 +13,7 @@ admin.site.register(UserProfile, CustomUserAdmin)
 
 @admin.register(LoanCalculation)
 class LoanCalculationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'amount', 'interest_rate', 'term_months', 'monthly_payment', 'created_at')
-    search_fields = ('user__username',)
-    list_filter = ('created_at', 'interest_rate')
+    list_display = ('user', 'calculation_type', 'calculation_subtype', 'resultado', 'created_at')
+    list_filter = ('calculation_type', 'calculation_subtype', 'created_at')
+    search_fields = ('user__username', 'calculation_type', 'calculation_subtype')
+    readonly_fields = ('created_at',)
